@@ -3,7 +3,7 @@
 #include "archiver.h"
 
 auto HuffmanTree::create(const wchar_t* str) -> void {
-    unsigned long long count[96000 + 1]{};
+    size_t count[96000 + 1]{};
     bool was[96000 + 1]{};
 
     for (int i = 0; str[i] != 0; ++i) {
@@ -18,7 +18,7 @@ auto HuffmanTree::create(const wchar_t* str) -> void {
             return a->weight < b->weight;
     })> tree;
 
-    for (unsigned long long i = 0; i < 96000 + 1; ++i) {
+    for (size_t i = 0; i < 96000 + 1; ++i) {
         if (count[i] == 0) continue;
         if (!was[i]) {
             auto now = new Node{static_cast<wchar_t>(i), count[i]};
@@ -44,7 +44,7 @@ auto HuffmanTree::create(const wchar_t* str) -> void {
     root = *tree.begin();
 }
 
-auto HuffmanTree::operator[](const wchar_t &letter) -> unsigned long long {
+auto HuffmanTree::operator[](const wchar_t &letter) -> size_t {
     if (letter_value.contains(letter)) {
         return letter_value.at(letter);
     }
@@ -62,8 +62,8 @@ auto HuffmanTree::operator[](const wchar_t &letter) -> unsigned long long {
     return letter_value[letter];
 }
 
-auto HuffmanTree::build(const Node *from) -> unsigned long long {
-    unsigned long long result = 0;
+auto HuffmanTree::build(const Node *from) -> size_t {
+    size_t result = 0;
     int power = 0;
 
     while (from->parent != nullptr) {

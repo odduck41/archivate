@@ -1,6 +1,12 @@
 #pragma once
+#include <bitset>
 #include <vector>
 #include <map>
+
+template<size_t length>
+struct symbol {
+    std::bitset<length> seq;
+};
 
 class HuffmanTree {
 public:
@@ -9,23 +15,23 @@ public:
     auto load(const char*) -> void;
     auto create(const wchar_t*) -> void;
 
-    auto operator[](const wchar_t&) -> unsigned long long;
+    auto operator[](const wchar_t&) -> size_t;
 
 private:
     struct Node {
         wchar_t letter{};
-        unsigned long long weight{};
+        size_t weight{};
 
         Node *left{}, *right{};
 
         Node *parent{};
     };
 
-    static auto build(const Node*) -> unsigned long long;
+    static auto build(const Node*) -> size_t;
 
     Node *root{};
     std::vector<Node*> alphabet{};
-    std::map<wchar_t, unsigned long long> letter_value;
+    std::map<wchar_t, size_t> letter_value;
 };
 
 
