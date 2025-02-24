@@ -14,7 +14,7 @@ public:
 private:
     struct Node {
         wchar_t letter{};
-        unsigned int weight{};
+        unsigned long long weight{};
 
         Node *left{}, *right{};
 
@@ -22,8 +22,6 @@ private:
     };
 
     static auto build(const Node*) -> unsigned long long;
-
-    friend auto operator<(const Node*, const Node*) -> bool;
 
     Node *root{};
     std::vector<Node*> alphabet{};
