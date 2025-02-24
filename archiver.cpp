@@ -2,7 +2,7 @@
 
 #include "archiver.h"
 
-auto HuffmanTree::create(const unsigned int* str) -> void {
+auto HuffmanTree::create(const wchar_t* str) -> void {
     unsigned int count[96000 + 1]{};
 
     for (int i = 0; str[i] != 0; ++i) {
@@ -33,7 +33,7 @@ auto HuffmanTree::create(const unsigned int* str) -> void {
     root = *tree.begin();
 }
 
-auto HuffmanTree::operator[](const unsigned int& letter) -> unsigned long long {
+auto HuffmanTree::operator[](const wchar_t& letter) -> unsigned long long {
     if (letter_value.contains(letter)) {
         return letter_value.at(letter);
     }

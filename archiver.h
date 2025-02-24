@@ -5,15 +5,15 @@
 class HuffmanTree {
 public:
     HuffmanTree() = default;
-    auto save(const unsigned int*) -> void;
-    auto load(const unsigned int*) -> void;
-    auto create(const unsigned int*) -> void;
+    auto save(const char*) -> void;
+    auto load(const char*) -> void;
+    auto create(const wchar_t*) -> void;
 
-    auto operator[](const unsigned int&) -> unsigned long long;
+    auto operator[](const wchar_t&) -> unsigned long long;
 
 private:
     struct Node {
-        unsigned int letter{};
+        wchar_t letter{};
         unsigned int weight{};
 
         Node *left{}, *right{};
@@ -27,7 +27,7 @@ private:
 
     Node *root{};
     std::vector<Node*> alphabet{};
-    std::map<unsigned int, unsigned long long> letter_value;
+    std::map<wchar_t, unsigned long long> letter_value;
 };
 
 
