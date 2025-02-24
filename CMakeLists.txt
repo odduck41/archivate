@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.30)
-project(archivate)
+project(archive)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
-add_executable(archivate main.cpp
+add_executable(archive main.cpp
         archiver.h
-        archiver.cpp)
+        archiver.cpp
+)

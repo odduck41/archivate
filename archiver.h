@@ -3,15 +3,16 @@
 class HuffmanTree {
 public:
     HuffmanTree() = default;
-    void save(const char*);
-    void load(const char*);
-    void create(const char*);
+    auto save(const unsigned int*) -> void;
+    auto load(const unsigned int*) -> void;
+    auto create(const unsigned int*) -> void;
 
-    auto operator[](char) const -> long long;
+    auto operator[](unsigned int) const -> long long;
+
 private:
     struct Node {
-        char letter{};
-        long long weight{};
+        unsigned int letter{};
+        unsigned int weight{};
 
         Node *left{}, *right{};
     };
