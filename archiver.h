@@ -1,4 +1,6 @@
 #pragma once
+#include <vector>
+#include <map>
 
 class HuffmanTree {
 public:
@@ -7,7 +9,7 @@ public:
     auto load(const unsigned int*) -> void;
     auto create(const unsigned int*) -> void;
 
-    auto operator[](unsigned int) const -> long long;
+    auto operator[](const unsigned int&) -> unsigned long long;
 
 private:
     struct Node {
@@ -15,14 +17,24 @@ private:
         unsigned int weight{};
 
         Node *left{}, *right{};
+
+        Node *parent{};
     };
+
+    static auto build(const Node*) -> unsigned long long;
 
     friend auto operator<(const Node*, const Node*) -> bool;
 
     Node *root{};
+    std::vector<Node*> alphabet{};
+    std::map<unsigned int, unsigned long long> letter_value;
 };
 
-void commands(int, const char**);
+
+auto convert(const char*) -> const unsigned int*;
+auto convert(const unsigned int*) -> const char*;
+
+auto commands(int, const char**) -> void;
 
 // squeezer [command]
 //
