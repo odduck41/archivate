@@ -15,6 +15,12 @@ public:
 
     auto packed() -> std::string;
     auto pack(const std::string &, const bool & = true) -> void;
+
+    auto setText(const std::string &) -> void;
+
+    auto unpack(const std::string &, const bool & = true) -> std::string;
+    auto unpacked(const std::string &) -> std::string;
+
 private:
     std::string text_{};
 
@@ -39,6 +45,8 @@ private:
 
     auto binpack(const std::string &) -> void;
     auto flatpack(const std::string &) -> void;
+    auto binunpack(const std::string &) -> std::string;
+    auto flatunpack(const std::string &) -> std::string;
 };
 
 

@@ -161,7 +161,41 @@ auto HuffmanTree::packed() -> std::string {
     return result;
 }
 
-auto HuffmanTree::pack(const std::string & filename, const bool & binary) -> void {
+auto HuffmanTree::pack(const std::string &filename, const bool &binary) -> void {
     if (binary) binpack(filename);
     else flatpack(filename);
+}
+
+auto HuffmanTree::setText(const std::string &text) -> void {
+    text_ = text;
+}
+
+auto HuffmanTree::unpack(const std::string &filename, const bool &binary) -> std::string {
+    if (binary) return binunpack(filename);
+    return flatunpack(filename);
+}
+
+auto HuffmanTree::binunpack(const std::string &filename) -> std::string {
+    std::ifstream is(filename, std::ios::binary);
+    size_t sz = 0;
+    is >> sz;
+
+    void *ptr = malloc((static_cast<int>(sz) + 7) / 8);
+    is.read(static_cast<char*>(ptr), (static_cast<int>(sz) + 7) / 8);
+
+    std::string result;
+    for (int i = 0; i < sz; ++i) {
+        const int byte = i / 8;
+        const int pwr = byte * 8 + 7 - i;
+
+        if (((*(static_cast<uint8_t*>(ptr) + byte)) >> pwr) & 0b1) {
+            result += "1";
+        } else {
+            result += "0";
+        }
+
+    }
+
+    free(ptr);
+    return result;
 }
