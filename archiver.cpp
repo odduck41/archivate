@@ -67,7 +67,7 @@ auto HuffmanTree::build() -> void {
     std::set<Node*, decltype(
         [](const Node *a, const Node *b) -> bool {
             if (a->weight == b->weight) {
-                return a->byte < b->byte;
+                return a->byte <= b->byte;
             }
             return a->weight < b->weight;
         }
@@ -130,7 +130,11 @@ auto HuffmanTree::binpack(const std::string &filename) -> void {
 
     void *ptr = malloc((static_cast<int>(s.size()) + 7) / 8);
     // os.write(reinterpret_cast<char*>(s.size()), sizeof(size_t));
-    os << s.size() << "\n";
+    // os << s.size() << "\n";
+    uint64_t sz = s.size();
+    os.write(reinterpret_cast<char *>(&sz), 8);
+    // char nullbyte = 0;
+    // os.write(reinterpret_cast<char *>(&nullbyte), 1);
 
     for (int i = 0; i < s.size(); ++i) {
         const int byte = i / 8;
@@ -177,8 +181,9 @@ auto HuffmanTree::unpack(const std::string &filename, const bool &binary) -> std
 
 auto HuffmanTree::binunpack(const std::string &filename) -> std::string {
     std::ifstream is(filename, std::ios::binary);
-    size_t sz = 0;
-    is >> sz;
+
+    uint64_t sz;
+    is.read(reinterpret_cast<char *>(&sz), 8);
 
     void *ptr = malloc((static_cast<int>(sz) + 7) / 8);
     is.read(static_cast<char*>(ptr), (static_cast<int>(sz) + 7) / 8);
@@ -197,5 +202,50 @@ auto HuffmanTree::binunpack(const std::string &filename) -> std::string {
     }
 
     free(ptr);
+    return unpacked(result);
+}
+
+auto HuffmanTree::flatunpack(const std::string &) -> std::string {}
+
+auto HuffmanTree::symbol(std::string &way) const -> unsigned char {
+    const Node* f = root;
+    size_t i = 0;
+    for (; i < way.size(); ++i) {
+        if (way[i] == '0') {
+            if (f->left == nullptr) {
+                way = {way.begin() + i, way.end()};
+                return f->byte;
+            }
+            f = f->left;
+        } else {
+            if (f->right == nullptr) {
+                way = {way.begin() + i, way.end()};
+                return f->byte;
+            }
+            f = f->right;
+        }
+    }
+    way = {way.begin() + i, way.end()};
+    return f->byte;
+}
+
+auto HuffmanTree::unpacked(std::string archived) -> std::string {
+    std::string result;
+    while (!archived.empty()) result += symbol(archived);
     return result;
+}
+
+auto HuffmanTree::read(const std::string &filename) -> void {
+    std::ifstream is(filename);
+    is.seekg(0, std::ifstream::end);
+    const long long size_ = is.tellg();
+    is.seekg(0, std::ifstream::beg);
+
+    const auto a = new char[size_];
+    is.read(a, size_);
+
+    const std::string s(a);
+    delete[] a;
+    build(s);
+
 }
