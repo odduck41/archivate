@@ -18,7 +18,7 @@ public:
 
     auto setText(const std::string &) -> void;
 
-    auto unpack(const std::string &, const bool & = true) -> std::string;
+    auto unpack(const std::string &, const std::string &, const bool & = true) -> void;
     auto unpacked(std::string) -> std::string;
     auto read(const std::string &) -> void;
 
@@ -43,12 +43,13 @@ private:
 
     static auto calculate(const Node *) -> std::string;
     auto get(const unsigned char &) -> std::string;
-    auto symbol(std::string &) const -> unsigned char;
+    // auto symbol(std::string &) const -> unsigned char;
 
     auto binpack(const std::string &) -> void;
     auto flatpack(const std::string &) -> void;
     auto binunpack(const std::string &) -> std::string;
     auto flatunpack(const std::string &) -> std::string;
+
 };
 
 
