@@ -3,7 +3,10 @@ project(archive)
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(archive main.cpp
-        archiver.h
-        archiver.cpp
+add_executable(archive
+        main.cpp
+        include/Byte.h
+        src/Byte.cpp
+        include/HuffmanTree.h
+        src/HuffmanTree.cpp
 )
