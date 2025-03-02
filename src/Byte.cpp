@@ -114,6 +114,7 @@ Byte::~Byte() {
 }
 
 RawData::RawData(const size_t &size) : size_(size) {
+    created = true;
     data_ = malloc(size_ + 1);
     static_cast<unsigned char*>(data_)[size_] = 0;
 
@@ -130,6 +131,19 @@ Byte& RawData::operator[](const size_t &index) {
         ));
     }
     return sequence_[index];
+}
+
+void RawData::create(const size_t &size) {
+    if (created) return;
+    created = true;
+    size_ = size;
+    data_ = malloc(size_ + 1);
+    static_cast<unsigned char*>(data_)[size_] = 0;
+
+    sequence_ = new Byte[size_];
+    for (size_t i = 0; i < size_; ++i) {
+        sequence_[i].setByte(static_cast<uint8_t*>(data_) + i);
+    }
 }
 
 const unsigned char* RawData::dump() const {

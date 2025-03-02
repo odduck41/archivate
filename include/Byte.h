@@ -43,14 +43,17 @@ private:
 
 class RawData {
 public:
+    RawData() = default;
     explicit RawData(const size_t &);
     Byte& operator[](const size_t &);
 
+    void create(const size_t &);
     [[nodiscard]] const unsigned char *dump() const;
     [[nodiscard]] size_t size() const;
 
     ~RawData();
 private:
+    bool created{};
     Byte* sequence_{};
     void* data_{};
     size_t size_{};
