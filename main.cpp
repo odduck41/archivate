@@ -4,7 +4,6 @@
 #include "archiver.h"
 
 int main() {
-    // std::locale::global(std::locale("en_US.UTF-8"));
     HuffmanTree tree;
     // tree.read("../Source.txt");
     // tree.pack("../archived.sq");

@@ -182,6 +182,7 @@ auto HuffmanTree::unpack(const std::string &in, const std::string &out, const bo
     std::ofstream os(out, std::ios::binary);
     // os.imbue(std::locale("en_US.UTF-8"));
     os.write(s.c_str(), s.size());
+    os.close();
 }
 
 auto HuffmanTree::binunpack(const std::string &filename) -> std::string {
