@@ -29,6 +29,7 @@ void HuffmanTree::load(const char * tree) {
 
 void HuffmanTree::encode(const char *filename) {
     delete[] code;
+    code = nullptr;
     std::vector<bool> seq;
     for (auto& byte: raw_) {
         const auto now = get(byte);
@@ -49,7 +50,7 @@ void HuffmanTree::encode(const char *filename) {
 
     std::ofstream os(filename, std::ios::binary);
     os.write(reinterpret_cast<const char*>(&sz), sizeof(uint64_t));
-    os.write(reinterpret_cast<char*>(result), sz);
+    os.write(reinterpret_cast<char*>(result), (sz + 7) / 8);
     os.close();
 
     delete[] result;
@@ -62,7 +63,7 @@ void HuffmanTree::decode(const char *input, const char *output) {
     is.read(reinterpret_cast<char*>(&sz), sizeof(uint64_t));
 
     auto encoded = new uint8_t[(sz + 7) / 8]{};
-    is.read(reinterpret_cast<char*>(encoded), sz);
+    is.read(reinterpret_cast<char*>(encoded), (sz + 7) / 8);
 
     is.close();
 
@@ -85,11 +86,8 @@ void HuffmanTree::decode(const char *input, const char *output) {
     }
     delete[] encoded;
 
-    sz = decoded.size();
-    auto result = decoded.data();
-
     std::ofstream os(output, std::ios::binary);
-    os.write(reinterpret_cast<char*>(result), sz);
+    os.write(reinterpret_cast<char*>(decoded.data()), decoded.size());
     os.close();
 }
 
@@ -141,8 +139,7 @@ void HuffmanTree::read(const char *filename) {
     is.seekg(0, std::ios::beg);
 
     raw_.resize(sz);
-    auto ptr = raw_.data();
-    is.read(reinterpret_cast<char*>(ptr), sz);
+    is.read(reinterpret_cast<char*>(raw_.data()), sz);
     is.close();
 }
 
