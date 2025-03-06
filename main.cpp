@@ -1,23 +1,21 @@
 #include <fstream>
-#include <iostream>
 
-#include "archiver.h"
+#include "include/HuffmanTree.h"
 
 int main() {
-    HuffmanTree tree;
-    // tree.read("../Source.txt");
-    // tree.pack("../archived.sq");
-    // tree.load("../c.tree");
-    // tree.unpack("../c-encode.packed", "../s.txt");
-    // tree.unpack("../СЫЧ.packed", "../СЫЧ2.txt");
-    // tree.read("../s.txt");
-    // tree.read("../s.txt");
-    // tree.pack("../c.packed");
-    // // std::cout << tree.packed() << std::endl;
-    // tree.read("../Source.txt");
-    // tree.pack("../s.p");
-    // tree.unpack("../s.p", "../e.txt");
-    // tree.load("../tree.tree");
-    // tree.unpack("../result.packed", "../img.jpg");
-    return 0;
+    HuffmanTree a("../test/images.jpeg");
+    a.encode("../test/e.packed");
+    a.save("../test/images.jpeg", "../test/e.tree");
+
+    HuffmanTree b;
+    b.load("../test/e.tree");
+    b.decode("../test/e.packed", "../test/e.jpeg");
+
+    // HuffmanTree a("../input.txt");
+    // a.encode("../e.packed");
+    // a.save("../input.txt", "../e.tree");
+
+    // HuffmanTree b;
+    // b.load("../e.tree");
+    // b.decode("../e.packed", "../output.txt");
 }
