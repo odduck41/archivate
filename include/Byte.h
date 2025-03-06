@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <iterator>
 
 class Byte {
     class Bit;
@@ -51,6 +52,9 @@ public:
     void create(const size_t &);
     [[nodiscard]] const unsigned char *dump() const;
     [[nodiscard]] size_t size() const;
+
+    std::vector<Byte>::iterator begin();
+    std::vector<Byte>::iterator end();
 
     ~RawData() = default;
 private:

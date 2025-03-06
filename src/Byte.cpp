@@ -115,3 +115,7 @@ const unsigned char* RawData::dump() const {
 size_t RawData::size() const {
     return size_;
 }
+
+std::vector<Byte>::iterator RawData::begin() { return sequence_.begin(); }
+
+std::vector<Byte>::iterator RawData::end() { return sequence_.end(); }

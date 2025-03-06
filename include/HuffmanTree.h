@@ -1,5 +1,6 @@
 #pragma once
 #include "../include/Byte.h"
+#include <set>
 
 class HuffmanTree {
 public:
@@ -12,6 +13,7 @@ private:
 
     struct Node {
         Byte leaf{};
+        uint64_t amount{};
 
         Node *left{};
         Node *right{};
@@ -19,8 +21,10 @@ private:
         Node* parent{};
     };
 
+    static bool cmp(const Node* a, const Node* b);
     Node* root{};
-    Node* leaves{};
+
+    std::set<Node*, decltype(cmp)> leaves{};
 
     void build();
 };
