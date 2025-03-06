@@ -5,12 +5,10 @@ std::map<unsigned char*, uint64_t> Byte::amount_;
 
 Byte::Bit& Byte::Bit::operator=(const bool &value) {
     if (value) {
-        if (*ptr_ & (1 << position_)) return *this;
-        *ptr_ ^= (1 << position_);
-        return *this;
+        *ptr_ |= (1 << position_);
+    } else {
+        *ptr_ &= ~(1 << position_);
     }
-    if (!(*ptr_ & (1 << position_))) return *this;
-    *ptr_ |= (1 << position_);
     return *this;
 }
 
@@ -19,7 +17,6 @@ ptr_(pointer), position_(position){}
 
 Byte::Bit::Bit(Bit &&other) noexcept {
     *this = other.value();
-
 }
 
 void Byte::Bit::flip() const {
@@ -52,6 +49,11 @@ void Byte::setByte(unsigned char *byte) {
 }
 
 Byte::Bit Byte::operator[](const uint8_t &index) {
+    if (index >= 8) {
+        throw std::out_of_range(std::format("Index out of the range: {} >= {}",
+            index, 8
+        ));
+    }
     return {byte_, static_cast<uint8_t>(7 - index)};
 }
 
@@ -76,6 +78,10 @@ Byte::operator int8_t() const {
 }
 
 Byte::operator int() const {
+    return *this->byte_;
+}
+
+Byte::operator bool() const {
     return *this->byte_;
 }
 
@@ -115,12 +121,12 @@ Byte::~Byte() {
 
 RawData::RawData(const size_t &size) : size_(size) {
     created = true;
-    data_ = malloc(size_ + 1);
-    static_cast<unsigned char*>(data_)[size_] = 0;
+    data_ = new unsigned char[size_ + 1];
+    data_[size_] = 0;
 
     sequence_ = new Byte[size_];
     for (size_t i = 0; i < size_; ++i) {
-        sequence_[i].setByte(static_cast<uint8_t*>(data_) + i);
+        sequence_[i].setByte(data_ + i);
     }
 }
 
@@ -133,21 +139,25 @@ Byte& RawData::operator[](const size_t &index) {
     return sequence_[index];
 }
 
+RawData::operator char*() const {
+    return reinterpret_cast<char*>(data_);
+}
+
 void RawData::create(const size_t &size) {
     if (created) return;
     created = true;
     size_ = size;
-    data_ = malloc(size_ + 1);
-    static_cast<unsigned char*>(data_)[size_] = 0;
+    data_ = new unsigned char[size_ + 1];
+    data_[size_] = 0;
 
     sequence_ = new Byte[size_];
     for (size_t i = 0; i < size_; ++i) {
-        sequence_[i].setByte(static_cast<uint8_t*>(data_) + i);
+        sequence_[i].setByte(data_ + i);
     }
 }
 
 const unsigned char* RawData::dump() const {
-   return static_cast<const unsigned char*>(this->data_);
+   return this->data_;
 }
 
 size_t RawData::size() const {
@@ -157,8 +167,8 @@ size_t RawData::size() const {
 RawData::~RawData() {
     delete[] sequence_;
     for (size_t i = 0; i < size_; ++i) {
-        if (Byte::isUsed(static_cast<unsigned char*>(data_) + i)) continue;
-        delete (static_cast<unsigned char*>(data_) + i);
+        if (Byte::isUsed(data_ + i)) continue;
+        delete (data_ + i);
     }
-    delete (static_cast<unsigned char*>(data_) + size_);
+    delete (data_ + size_);
 }

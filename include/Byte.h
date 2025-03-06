@@ -11,8 +11,9 @@ public:
     Byte(const Byte&);
     Byte(Byte&&) noexcept;
     explicit Byte(const uint8_t &);
-    explicit operator int8_t() const;
-    explicit operator int() const;
+    operator int8_t() const; // NOLINT
+    operator int() const; // NOLINT
+    operator bool() const; // NOLINT
 
 
     static bool isUsed(unsigned char *);
@@ -46,6 +47,7 @@ public:
     RawData() = default;
     explicit RawData(const size_t &);
     Byte& operator[](const size_t &);
+    operator char*() const; // NOLINT
 
     void create(const size_t &);
     [[nodiscard]] const unsigned char *dump() const;
@@ -55,6 +57,6 @@ public:
 private:
     bool created{};
     Byte* sequence_{};
-    void* data_{};
+    unsigned char* data_{};
     size_t size_{};
 };

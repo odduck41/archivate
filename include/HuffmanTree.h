@@ -3,10 +3,10 @@
 
 class HuffmanTree {
 public:
-    explicit HuffmanTree(const unsigned char *);
+    explicit HuffmanTree(const char *);
 
-    void encode(const unsigned char *);
-    void decode(const unsigned char *);
+    void encode(const char *);
+    void decode(const char *) const;
 private:
     RawData data_{};
 
@@ -19,4 +19,8 @@ private:
         Node* parent{};
     };
 
+    Node* root{};
+    Node* leaves{};
+
+    void build();
 };
