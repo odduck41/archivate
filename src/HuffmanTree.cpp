@@ -55,6 +55,7 @@ void HuffmanTree::encode(const char *output) {
     os.write(reinterpret_cast<char*>(&sz), sizeof(uint64_t));
     os.write(encoded, static_cast<long>(encoded.size()));
     os.close();
+    std::cout << encoded << "\n";
 }
 
 void HuffmanTree::decode(const char *from, const char *to, const char *tree) {
@@ -65,11 +66,12 @@ void HuffmanTree::decode(const char *from, const char *to, const char *tree) {
     RawData encoded((sz + 7) / 8);
     is.read(encoded, static_cast<long>(encoded.size()));
     is.close();
+    std::cout << encoded;
 
-    RawData decoded(3);
-    size_t index = 0;
+    RawData decoded;
+    std::vector<unsigned char> a;
     auto* nw = root;
-    for (size_t i = 0; index < decoded.size(); ++i) {
+    for (size_t i = 0; i < sz; ++i) {
         if (encoded[i / 8][i - i / 8 * 8]) {
             nw = nw->right;
         } else {
@@ -77,13 +79,18 @@ void HuffmanTree::decode(const char *from, const char *to, const char *tree) {
         }
 
         if (nw->left == nullptr) {
-            decoded[index] = nw->leaf;
+            // decoded[index] = nw->leaf;
+            a.push_back(nw->leaf.value());
             nw = root;
-            ++index;
         }
     }
+    decoded.create(a.size());
+    for (size_t i = 0; i < a.size(); ++i) {
+        decoded[i] = Byte(a[i]);
+    }
+
     std::ofstream os(to, std::ios::binary);
-    os.write(decoded, 3);
+    os.write(decoded, static_cast<long>(decoded.size()));
     os.close();
 
 }
@@ -127,7 +134,7 @@ void HuffmanTree::build(std::vector<uint32_t> amount) {
         const auto right = *tree.begin();
         tree.erase(tree.begin());
 
-        const auto parent = new Node{Byte(), left->amount + right->amount, left, right};
+        const auto parent = new Node{Byte(left->leaf), left->amount + right->amount, left, right};
         left->parent = right->parent = parent;
         tree.insert(parent);
     }
