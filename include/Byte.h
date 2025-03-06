@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include <map>
+#include <memory>
 
 class Byte {
     class Bit;
@@ -15,16 +15,14 @@ public:
     operator int() const; // NOLINT
     operator bool() const; // NOLINT
 
-
-    static bool isUsed(unsigned char *);
     [[nodiscard]] unsigned char value() const;
     void setByte(unsigned char *);
     Bit operator[](const uint8_t &);
-    ~Byte();
+    ~Byte() = default;
 private:
     class Bit {
     public:
-        Bit(unsigned char *, const uint8_t &);
+        Bit(std::shared_ptr<unsigned char>, const uint8_t &);
         Bit(Bit &&) noexcept;
 
         Bit(const Bit &) = delete;
@@ -35,11 +33,10 @@ private:
         void flip() const;
         [[nodiscard]] bool value() const;
     private:
-        unsigned char *ptr_{};
+        std::shared_ptr<unsigned char> ptr_{};
         uint8_t position_{};
     };
-    unsigned char *byte_{};
-    static std::map<unsigned char*, uint64_t> amount_;
+    std::shared_ptr<unsigned char> byte_{};
 };
 
 class RawData {
@@ -57,6 +54,6 @@ public:
 private:
     bool created{};
     Byte* sequence_{};
-    unsigned char* data_{};
+    std::shared_ptr<unsigned char[]> data_{};
     size_t size_{};
 };

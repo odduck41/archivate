@@ -1,7 +1,6 @@
 #include "../include/Byte.h"
 #include <format>
-
-std::map<unsigned char*, uint64_t> Byte::amount_;
+#include <utility>
 
 Byte::Bit& Byte::Bit::operator=(const bool &value) {
     if (value) {
@@ -12,16 +11,14 @@ Byte::Bit& Byte::Bit::operator=(const bool &value) {
     return *this;
 }
 
-Byte::Bit::Bit(unsigned char *pointer, const uint8_t &position) :
-ptr_(pointer), position_(position){}
+Byte::Bit::Bit(std::shared_ptr<unsigned char> pointer, const uint8_t &position) :
+ptr_(std::move(pointer)), position_(position){}
 
-Byte::Bit::Bit(Bit &&other) noexcept {
-    *this = other.value();
-}
+Byte::Bit::Bit(Bit &&other) noexcept : ptr_(std::move(other.ptr_)), position_(other.position_) {}
 
 void Byte::Bit::flip() const {
     if (*ptr_ & (1 << position_)) {
-        *ptr_ ^= (1 << position_);
+        *ptr_ &= ~(1 << position_);
         return;
     }
     *ptr_ |= (1 << position_);
@@ -31,24 +28,16 @@ bool Byte::Bit::value() const {
     return *ptr_ & (1 << position_);
 }
 
-Byte::Byte(unsigned char *byte) : byte_(byte) {
-    ++amount_[byte];
-}
+Byte::Byte(unsigned char *byte) : byte_(byte) {}
 
 void Byte::setByte(unsigned char *byte) {
-    if (byte_ != nullptr) {
-        --amount_[byte_];
-        if (!amount_[byte_]) {
-            amount_.erase(byte_);
-            delete byte_;
-            byte_ = nullptr;
-        }
-    }
-    byte_ = byte;
-    ++amount_[byte_];
+    *this = Byte(byte);
 }
 
 Byte::Bit Byte::operator[](const uint8_t &index) {
+    if (byte_ == nullptr) {
+        throw std::runtime_error("Byte is nullptr");
+    }
     if (index >= 8) {
         throw std::out_of_range(std::format("Index out of the range: {} >= {}",
             index, 8
@@ -59,12 +48,12 @@ Byte::Bit Byte::operator[](const uint8_t &index) {
 
 Byte::Byte(const Byte &other) {
     this->byte_ = other.byte_;
-    ++amount_[byte_];
+
 }
 
 Byte::Byte(Byte &&other)  noexcept {
+    this->byte_ = nullptr;
     this->byte_ = other.byte_;
-    ++amount_[byte_];
 }
 
 Byte::Byte(const uint8_t &value) {
@@ -85,10 +74,6 @@ Byte::operator bool() const {
     return *this->byte_;
 }
 
-bool Byte::isUsed(unsigned char *byte) {
-    return amount_[byte] != 0;
-}
-
 unsigned char Byte::value() const {
     return *this->byte_;
 }
@@ -96,37 +81,19 @@ unsigned char Byte::value() const {
 Byte& Byte::operator=(const Byte &other) {
     if (this == &other) return *this;
 
-    if (byte_ != nullptr) {
-        --amount_[byte_];
-        if (!amount_[byte_]) {
-            amount_.erase(byte_);
-            delete byte_;
-            byte_ = nullptr;
-        }
-    }
-
     this->byte_ = other.byte_;
-    ++amount_[byte_];
 
     return *this;
 }
 
-Byte::~Byte() {
-    --amount_[byte_];
-    if (!amount_[byte_]) {
-        amount_.erase(byte_);
-        delete byte_;
-    }
-}
-
 RawData::RawData(const size_t &size) : size_(size) {
     created = true;
-    data_ = new unsigned char[size_ + 1];
+    data_ = std::shared_ptr<unsigned char[]>(new unsigned char[size_ + 1], std::default_delete<unsigned char[]>());
     data_[size_] = 0;
 
     sequence_ = new Byte[size_];
     for (size_t i = 0; i < size_; ++i) {
-        sequence_[i].setByte(data_ + i);
+        sequence_[i].setByte(data_.get() + i);
     }
 }
 
@@ -140,24 +107,16 @@ Byte& RawData::operator[](const size_t &index) {
 }
 
 RawData::operator char*() const {
-    return reinterpret_cast<char*>(data_);
+    return reinterpret_cast<char*>(data_.get());
 }
 
 void RawData::create(const size_t &size) {
     if (created) return;
-    created = true;
-    size_ = size;
-    data_ = new unsigned char[size_ + 1];
-    data_[size_] = 0;
-
-    sequence_ = new Byte[size_];
-    for (size_t i = 0; i < size_; ++i) {
-        sequence_[i].setByte(data_ + i);
-    }
+    *this = RawData(size);
 }
 
 const unsigned char* RawData::dump() const {
-   return this->data_;
+   return this->data_.get();
 }
 
 size_t RawData::size() const {
@@ -166,9 +125,4 @@ size_t RawData::size() const {
 
 RawData::~RawData() {
     delete[] sequence_;
-    for (size_t i = 0; i < size_; ++i) {
-        if (Byte::isUsed(data_ + i)) continue;
-        delete (data_ + i);
-    }
-    delete (data_ + size_);
 }
