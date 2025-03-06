@@ -28,10 +28,12 @@ bool Byte::Bit::value() const {
     return *ptr_ & (1 << position_);
 }
 
-Byte::Byte(unsigned char *byte) : byte_(byte) {}
+Byte::Byte(std::shared_ptr<unsigned char> byte) : byte_(std::move(byte)) {}
 
-void Byte::setByte(unsigned char *byte) {
-    *this = Byte(byte);
+Byte::Byte(unsigned char *&& byte) : byte_(std::shared_ptr<unsigned char>(byte)) {}
+
+void Byte::setByte(std::shared_ptr<unsigned char> byte) {
+    byte_ = std::move(byte);
 }
 
 Byte::Bit Byte::operator[](const uint8_t &index) {
@@ -44,16 +46,6 @@ Byte::Bit Byte::operator[](const uint8_t &index) {
         ));
     }
     return {byte_, static_cast<uint8_t>(7 - index)};
-}
-
-Byte::Byte(const Byte &other) {
-    this->byte_ = other.byte_;
-
-}
-
-Byte::Byte(Byte &&other)  noexcept {
-    this->byte_ = nullptr;
-    this->byte_ = other.byte_;
 }
 
 Byte::Byte(const uint8_t &value) {
@@ -86,14 +78,15 @@ Byte& Byte::operator=(const Byte &other) {
     return *this;
 }
 
-RawData::RawData(const size_t &size) : size_(size) {
+RawData::RawData(const size_t &size) :
+data_(new unsigned char[size + 1], std::default_delete<unsigned char[]>()),
+size_(size) {
     created = true;
-    data_ = std::shared_ptr<unsigned char[]>(new unsigned char[size_ + 1], std::default_delete<unsigned char[]>());
-    data_[size_] = 0;
+    data_[static_cast<long>(size_)] = 0;
 
-    sequence_ = new Byte[size_];
+    sequence_.resize(size);
     for (size_t i = 0; i < size_; ++i) {
-        sequence_[i].setByte(data_.get() + i);
+        sequence_[i].setByte(std::shared_ptr<unsigned char>(data_, data_.get() + i));
     }
 }
 
@@ -121,8 +114,4 @@ const unsigned char* RawData::dump() const {
 
 size_t RawData::size() const {
     return size_;
-}
-
-RawData::~RawData() {
-    delete[] sequence_;
 }

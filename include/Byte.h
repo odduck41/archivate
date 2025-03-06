@@ -1,22 +1,24 @@
 #pragma once
 #include <cstdint>
+#include <vector>
 #include <memory>
 
 class Byte {
     class Bit;
 public:
     Byte() = default;
-    explicit Byte(unsigned char *);
+    explicit Byte(std::shared_ptr<unsigned char>);
+    explicit Byte(unsigned char*&&);
     Byte& operator=(const Byte& other);
-    Byte(const Byte&);
-    Byte(Byte&&) noexcept;
+    Byte(const Byte&) = default;
+    Byte(Byte&&) noexcept = default;
     explicit Byte(const uint8_t &);
     operator int8_t() const; // NOLINT
     operator int() const; // NOLINT
     operator bool() const; // NOLINT
 
     [[nodiscard]] unsigned char value() const;
-    void setByte(unsigned char *);
+    void setByte(std::shared_ptr<unsigned char>);
     Bit operator[](const uint8_t &);
     ~Byte() = default;
 private:
@@ -50,10 +52,10 @@ public:
     [[nodiscard]] const unsigned char *dump() const;
     [[nodiscard]] size_t size() const;
 
-    ~RawData();
+    ~RawData() = default;
 private:
     bool created{};
-    Byte* sequence_{};
+    std::vector<Byte> sequence_{};
     std::shared_ptr<unsigned char[]> data_{};
     size_t size_{};
 };
