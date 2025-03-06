@@ -1,38 +1,34 @@
 #pragma once
-#include "../include/Byte.h"
-#include <set>
-#include <map>
-
+#include <vector>
 
 class HuffmanTree {
 public:
     explicit HuffmanTree(const char *);
     HuffmanTree() = default;
 
-    std::vector<uint32_t> load(const char *);
-    void save(const char *);
+    void save(const char *, const char *);
+    void load(const char *);
 
     void encode(const char *);
-    void decode(const char *, const char *, const char *);
-    std::string encode();
+    void decode(const char *, const char *);
 private:
-    RawData data_{};
+    uint8_t *raw_{};
 
     struct Node {
-        Byte leaf{};
-        uint32_t amount{};
+        uint8_t value{};
+        uint32_t weight{};
 
-        Node *left{};
-        Node *right{};
-
-        Node* parent{};
+        Node *left{}, *right{};
+        Node *parent{};
     };
-    Node* root{};
 
-    std::vector<Node*> leaves{};
-    std::map<unsigned char, std::string> path{};
+    Node *root_{};
+    std::vector<Node*> leaves_{};
+    std::vector<bool>* code{};
+    uint32_t* amount_{};
 
+    void build();
     void read(const char *);
-    void build(std::vector<uint32_t> = {});
-    std::string get(unsigned char);
+    void clear(const Node* = nullptr);
+    std::vector<bool> get(uint8_t);
 };

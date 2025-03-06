@@ -1,132 +1,122 @@
 #include "../include/HuffmanTree.h"
-
+#include <set>
 #include <fstream>
-#include <iostream>
 #include <__algorithm/ranges_reverse.h>
 
 HuffmanTree::HuffmanTree(const char *filename) {
     read(filename);
+}
+
+void HuffmanTree::save(const char *filename, const char *tree) {
+    read(filename);
+    build();
+    std::ofstream os(tree, std::ios::binary);
+    os.write(reinterpret_cast<char*>(amount_), 256);
+    os.close();
+}
+
+void HuffmanTree::load(const char * tree) {
+    delete[] amount_;
+    amount_ = new uint32_t[256](0);
+
+    std::ifstream is(tree, std::ios::binary);
+    is.read(reinterpret_cast<char*>(amount_), 256);
+    is.close();
+
     build();
 }
 
-void HuffmanTree::read(const char *filename) {
-    std::ifstream is(filename, std::ios_base::binary);
-    is.seekg(0, std::ifstream::end);
-    const size_t sz = is.tellg();
-    is.seekg(0, std::ifstream::beg);
-
-    data_.create(sz);
-    is.read(data_, static_cast<long>(sz));
-
-    is.close();
-}
-
-std::vector<uint32_t> HuffmanTree::load(const char *filename) {
-    std::vector<uint32_t> amount(256, 0);
-    std::ifstream is(filename, std::ios::binary);
-    for (auto& i: amount) {
-        is.read(reinterpret_cast<char*>(&i), sizeof(uint32_t));
+void HuffmanTree::encode(const char *filename) {
+    delete[] code;
+    std::vector<bool> seq;
+    for (auto& byte: raw_) {
+        const auto now = get(byte);
+        seq.insert(seq.end(), now.begin(), now.end());
     }
-    is.close();
-    return amount;
-}
 
-void HuffmanTree::save(const char *filename) {
-    std::vector<uint32_t> amount(256, 0);
-    for (auto& byte: this->data_) {
-        ++amount[byte.value()];
+    const uint64_t sz = seq.size();
+
+    const auto result = new uint8_t[(sz + 7) / 8](0);
+
+    for (size_t i = 0; i < sz; ++i) {
+        const auto byte = i / 8;
+        const auto r_bit = byte * 8 + 7 - i;
+        if (seq[i]) {
+            result[byte] |= (1 << r_bit);
+        }
     }
 
     std::ofstream os(filename, std::ios::binary);
-    for (auto& i: amount) {
-        os.write(reinterpret_cast<char*>(&i), sizeof(uint32_t));
-    }
+    os.write(reinterpret_cast<const char*>(&sz), sizeof(uint64_t));
+    os.write(reinterpret_cast<char*>(result), sz);
     os.close();
+
+    delete[] result;
 }
 
-void HuffmanTree::encode(const char *output) {
-    const auto enc = encode();
-    RawData encoded((enc.size() + 7) / 8);
-    for (size_t i = 0; i < enc.size(); ++i) {
-        encoded[i / 8][i - i / 8 * 8] = (enc[i] == '1');
-    }
-    std::ofstream os(output, std::ios::binary);
-    auto sz = enc.size();
-    os.write(reinterpret_cast<char*>(&sz), sizeof(uint64_t));
-    os.write(encoded, static_cast<long>(encoded.size()));
-    os.close();
-    std::cout << encoded << "\n";
-}
+void HuffmanTree::decode(const char *input, const char *output) {
+    std::ifstream is(input, std::ios::binary);
 
-void HuffmanTree::decode(const char *from, const char *to, const char *tree) {
-    build(load(tree));
-    std::ifstream is(from, std::ios::binary);
-    uint64_t sz;
+    uint64_t sz = 0;
     is.read(reinterpret_cast<char*>(&sz), sizeof(uint64_t));
-    RawData encoded((sz + 7) / 8);
-    is.read(encoded, static_cast<long>(encoded.size()));
+
+    auto encoded = new uint8_t[(sz + 7) / 8];
+    is.read(reinterpret_cast<char*>(encoded), sz);
+
     is.close();
-    std::cout << encoded;
 
-    RawData decoded;
-    std::vector<unsigned char> a;
-    auto* nw = root;
+    std::vector<uint8_t> decoded;
+    const Node *now = root_;
+
     for (size_t i = 0; i < sz; ++i) {
-        if (encoded[i / 8][i - i / 8 * 8]) {
-            nw = nw->right;
+        const auto byte = i / 8;
+        const auto r_bit = byte * 8 + 7 - i;
+        if (!((encoded[byte] >> r_bit) & 0b1)) {
+            now = now->left;
         } else {
-            nw = nw->left;
+            now = now->right;
         }
 
-        if (nw->left == nullptr) {
-            // decoded[index] = nw->leaf;
-            a.push_back(nw->leaf.value());
-            nw = root;
+        if (now->left == now->right) {
+            decoded.push_back(now->value);
+            now = root_;
         }
     }
-    decoded.create(a.size());
-    for (size_t i = 0; i < a.size(); ++i) {
-        decoded[i] = Byte(a[i]);
-    }
+    delete encoded[];
 
-    std::ofstream os(to, std::ios::binary);
-    os.write(decoded, static_cast<long>(decoded.size()));
+    delete[] raw_;
+    raw_ = &(*decoded.begin());
+
+    std::ofstream os(output, std::ios::binary);
+    os.write(reinterpret_cast<char*>(raw_), decoded.size());
     os.close();
-
 }
 
-std::string HuffmanTree::encode() {
-    std::string encoded;
-    for (auto& i : data_) {
-        encoded += get(i.value());
-    }
-    return encoded;
-}
+void HuffmanTree::build() {
+    clear();
+    leaves_.clear();
 
-void HuffmanTree::build(std::vector<uint32_t> amount) {
-    if (amount.empty()) {
-        amount.resize(256, 0);
-        for (auto& byte: data_) {
-            ++amount[byte.value()];
-        }
+    if (amount_ == nullptr) {
+        amount_ = new uint32_t[256](0);
 
-        for (auto& byte : data_) {
-            leaves.push_back(new Node{byte, amount[byte.value()]});
-        }
-    } else {
-        for (uint16_t i = 0; i < 256; ++i) {
-            if (!amount[i]) continue;
-            leaves.push_back(new Node{Byte(i), amount[i]});
+        for (const auto& byte: raw_) {
+            ++amount_[byte];
         }
     }
 
+    for (uint16_t i = 0; i < 256; ++i) {
+        if (!amount_[i]) continue;
+        leaves_.push_back(new Node{static_cast<uint8_t>(i), amount_[i]});
+    }
 
-    std::set<Node*, decltype([](const Node* a, const Node* b) {
-        if (a->amount == b->amount) {
-            return a->leaf.value() <= b->leaf.value();
+    std::set<Node*, decltype(
+        [](const Node* a, const Node* b) -> bool {
+            if (a->weight == b->weight) {
+                return a->value <= b->value;
+            }
+            return a->weight < b->weight;
         }
-        return a->amount < b->amount;
-    })> tree = {leaves.begin(), leaves.end()};
+    )> tree = {leaves_.begin(), leaves_.end()};
 
     while (tree.size() > 1) {
         const auto left = *tree.begin();
@@ -134,35 +124,65 @@ void HuffmanTree::build(std::vector<uint32_t> amount) {
         const auto right = *tree.begin();
         tree.erase(tree.begin());
 
-        const auto parent = new Node{Byte(left->leaf), left->amount + right->amount, left, right};
+        const auto parent = new Node{0, left->weight + right->weight, left, right};
+
         left->parent = right->parent = parent;
         tree.insert(parent);
     }
-    root = *tree.begin();
+
+    root_ = *tree.begin();
 }
 
-std::string HuffmanTree::get(const unsigned char x) {
-    if (path.contains(x)) return path[x];
-    std::string way;
-    const Node *now = nullptr;
-    for (const auto& i : leaves) {
-        if (i->leaf.value() == x) {
-            now = i;
+void HuffmanTree::read(const char *filename) {
+    std::ifstream is(filename, std::ios::binary);
+    is.seekg(0, std::ios::end);
+    const auto sz = is.tellg();
+    is.seekg(0, std::ios::beg);
+
+    raw_ = new uint8_t[sz];
+    is.read(reinterpret_cast<char*>(raw_), sz);
+    is.close();
+}
+
+void HuffmanTree::clear(const Node *me) {
+    if (me == nullptr) {
+        me = root_;
+        if (me == nullptr) throw std::logic_error("You are stupid: noone calls \"destructor\" from empty object!");
+    }
+
+    if (me->left != nullptr) {
+        clear(me->left);
+    }
+    if (me->right != nullptr) {
+        clear(me->right);
+    }
+    delete me;
+    me = nullptr;
+}
+
+std::vector<bool> HuffmanTree::get(const uint8_t x) {
+    if (code == nullptr) {
+        code = new std::vector<bool>[256];
+    }
+    if (!code[x].empty()) return code[x];
+    const Node *me = nullptr;
+    for (const auto & leave : leaves_) {
+        if (leave->value == x) {
+            me = leave;
             break;
         }
     }
-    if (now == nullptr) throw std::logic_error("Symbol not found");
 
-    while (now->parent != nullptr) {
-        const auto parent = now->parent;
-        if (parent->left == now) {
-            way += '0';
+    if (me == nullptr) throw std::logic_error("Byte not found");
+
+    while (me->parent != nullptr) {
+        if (const auto parent = me->parent; parent->left == me) {
+            code[x].push_back(false);
         } else {
-            way += '1';
+            code[x].push_back(true);
         }
-        now = parent;
     }
-    std::ranges::reverse(way);
-    path[x] = way;
-    return path[x];
+
+    std::ranges::reverse(code[x]);
+    return code[x];
 }
