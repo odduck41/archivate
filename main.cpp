@@ -1,12 +1,21 @@
-#include "include/Byte.h"
-#include "include/HuffmanTree.h"
 #include <fstream>
 
+#include "include/HuffmanTree.h"
+
 int main() {
-    HuffmanTree a("../hello.txt");
-    a.save("../tree.tree");
-    a.encode("../encoded.p");
+    HuffmanTree a("../test/images.jpeg");
+    a.encode("../test/e.packed");
+    a.save("../test/images.jpeg", "../test/e.tree");
 
     HuffmanTree b;
-    b.decode("../encoded.p", "../out.txt", "../tree.tree");
+    b.load("../test/e.tree");
+    b.decode("../test/e.packed", "../test/e.jpeg");
+
+    // HuffmanTree a("../input.txt");
+    // a.encode("../e.packed");
+    // a.save("../input.txt", "../e.tree");
+
+    // HuffmanTree b;
+    // b.load("../e.tree");
+    // b.decode("../e.packed", "../output.txt");
 }
