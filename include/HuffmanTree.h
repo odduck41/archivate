@@ -12,7 +12,7 @@ public:
     void encode(const char *);
     void decode(const char *, const char *);
 private:
-    uint8_t *raw_{};
+    std::vector<uint8_t> raw_{};
 
     struct Node {
         uint8_t value{};

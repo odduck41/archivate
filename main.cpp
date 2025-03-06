@@ -1,12 +1,21 @@
 #include <fstream>
 
+#include "include/HuffmanTree.h"
+
 int main() {
-    uint8_t* const e = new uint8_t[256];
-    for (int i = 0; i < 256; ++i) {
-        e[i] = i;
-    }
-    std::ofstream os("../test.txt", std::ios::binary);
-    os.write(reinterpret_cast<char*>(e), 256);
-    os.close();
-    delete[] e;
+    HuffmanTree a("../images.jpeg");
+    a.encode("../e.packed");
+    a.save("../images.jpeg", "../e.tree");
+
+    HuffmanTree b;
+    b.load("../e.tree");
+    b.decode("../e.packed", "../e.jpeg");
+
+    // HuffmanTree a("../input.txt");
+    // a.encode("../e.packed");
+    // a.save("../input.txt", "../e.tree");
+
+    // HuffmanTree b;
+    // b.load("../e.tree");
+    // b.decode("../e.packed", "../output.txt");
 }

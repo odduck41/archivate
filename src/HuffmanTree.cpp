@@ -5,22 +5,23 @@
 
 HuffmanTree::HuffmanTree(const char *filename) {
     read(filename);
+    build();
 }
 
 void HuffmanTree::save(const char *filename, const char *tree) {
     read(filename);
     build();
     std::ofstream os(tree, std::ios::binary);
-    os.write(reinterpret_cast<char*>(amount_), 256);
+    os.write(reinterpret_cast<char*>(amount_), 256 * sizeof(uint32_t));
     os.close();
 }
 
 void HuffmanTree::load(const char * tree) {
     delete[] amount_;
-    amount_ = new uint32_t[256](0);
+    amount_ = new uint32_t[256]{};
 
     std::ifstream is(tree, std::ios::binary);
-    is.read(reinterpret_cast<char*>(amount_), 256);
+    is.read(reinterpret_cast<char*>(amount_), 256 * sizeof(uint32_t));
     is.close();
 
     build();
@@ -36,7 +37,7 @@ void HuffmanTree::encode(const char *filename) {
 
     const uint64_t sz = seq.size();
 
-    const auto result = new uint8_t[(sz + 7) / 8](0);
+    const auto result = new uint8_t[(sz + 7) / 8]{};
 
     for (size_t i = 0; i < sz; ++i) {
         const auto byte = i / 8;
@@ -60,7 +61,7 @@ void HuffmanTree::decode(const char *input, const char *output) {
     uint64_t sz = 0;
     is.read(reinterpret_cast<char*>(&sz), sizeof(uint64_t));
 
-    auto encoded = new uint8_t[(sz + 7) / 8];
+    auto encoded = new uint8_t[(sz + 7) / 8]{};
     is.read(reinterpret_cast<char*>(encoded), sz);
 
     is.close();
@@ -82,13 +83,12 @@ void HuffmanTree::decode(const char *input, const char *output) {
             now = root_;
         }
     }
-    delete encoded[];
+    delete[] encoded;
 
-    delete[] raw_;
-    raw_ = &(*decoded.begin());
+    auto result = &(*decoded.begin());
 
     std::ofstream os(output, std::ios::binary);
-    os.write(reinterpret_cast<char*>(raw_), decoded.size());
+    os.write(reinterpret_cast<char*>(result), decoded.size());
     os.close();
 }
 
@@ -97,7 +97,7 @@ void HuffmanTree::build() {
     leaves_.clear();
 
     if (amount_ == nullptr) {
-        amount_ = new uint32_t[256](0);
+        amount_ = new uint32_t[256]{};
 
         for (const auto& byte: raw_) {
             ++amount_[byte];
@@ -139,15 +139,16 @@ void HuffmanTree::read(const char *filename) {
     const auto sz = is.tellg();
     is.seekg(0, std::ios::beg);
 
-    raw_ = new uint8_t[sz];
-    is.read(reinterpret_cast<char*>(raw_), sz);
+    raw_.resize(sz);
+    auto ptr = &(*raw_.begin());
+    is.read(reinterpret_cast<char*>(ptr), sz);
     is.close();
 }
 
 void HuffmanTree::clear(const Node *me) {
     if (me == nullptr) {
         me = root_;
-        if (me == nullptr) throw std::logic_error("You are stupid: noone calls \"destructor\" from empty object!");
+        if (me == nullptr) return;
     }
 
     if (me->left != nullptr) {
@@ -162,7 +163,7 @@ void HuffmanTree::clear(const Node *me) {
 
 std::vector<bool> HuffmanTree::get(const uint8_t x) {
     if (code == nullptr) {
-        code = new std::vector<bool>[256];
+        code = new std::vector<bool>[256]{};
     }
     if (!code[x].empty()) return code[x];
     const Node *me = nullptr;
@@ -176,11 +177,15 @@ std::vector<bool> HuffmanTree::get(const uint8_t x) {
     if (me == nullptr) throw std::logic_error("Byte not found");
 
     while (me->parent != nullptr) {
-        if (const auto parent = me->parent; parent->left == me) {
+        const auto parent = me->parent;
+
+        if (parent->left == me) {
             code[x].push_back(false);
         } else {
             code[x].push_back(true);
         }
+
+        me = parent;
     }
 
     std::ranges::reverse(code[x]);
