@@ -85,10 +85,11 @@ void HuffmanTree::decode(const char *input, const char *output) {
     }
     delete[] encoded;
 
-    auto result = &(*decoded.begin());
+    sz = decoded.size();
+    auto result = decoded.data();
 
     std::ofstream os(output, std::ios::binary);
-    os.write(reinterpret_cast<char*>(result), decoded.size());
+    os.write(reinterpret_cast<char*>(result), sz);
     os.close();
 }
 
@@ -140,7 +141,7 @@ void HuffmanTree::read(const char *filename) {
     is.seekg(0, std::ios::beg);
 
     raw_.resize(sz);
-    auto ptr = &(*raw_.begin());
+    auto ptr = raw_.data();
     is.read(reinterpret_cast<char*>(ptr), sz);
     is.close();
 }
