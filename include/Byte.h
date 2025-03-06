@@ -35,6 +35,7 @@ private:
         Bit& operator=(const bool &);
         void flip() const;
         [[nodiscard]] bool value() const;
+        operator bool() const; // NOLINT
     private:
         std::shared_ptr<unsigned char> ptr_{};
         uint8_t position_{};

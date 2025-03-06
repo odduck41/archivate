@@ -28,6 +28,10 @@ bool Byte::Bit::value() const {
     return *ptr_ & (1 << position_);
 }
 
+Byte::Bit::operator bool() const {
+    return value();
+}
+
 Byte::Byte(std::shared_ptr<unsigned char> byte) : byte_(std::move(byte)) {}
 
 Byte::Byte(unsigned char *&& byte) : byte_(std::shared_ptr<unsigned char>(byte)) {}
@@ -49,9 +53,7 @@ Byte::Bit Byte::operator[](const uint8_t &index) {
 }
 
 Byte::Byte(const uint8_t &value) {
-    for (uint8_t i = 0; i < 8; ++i) {
-        (*this)[i] = (value & (1 << i));
-    }
+    byte_ = std::shared_ptr<unsigned char>(new unsigned char(value));
 }
 
 Byte::operator int8_t() const {
@@ -67,13 +69,14 @@ Byte::operator bool() const {
 }
 
 unsigned char Byte::value() const {
+    if (this->byte_ == nullptr) return 0;
     return *this->byte_;
 }
 
 Byte& Byte::operator=(const Byte &other) {
     if (this == &other) return *this;
 
-    this->byte_ = other.byte_;
+    *this->byte_ = *other.byte_;
 
     return *this;
 }
